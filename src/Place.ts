@@ -35,7 +35,7 @@ export class Place extends BaseEntity {
     }
 
 
-    static async getCoordinates(city: string): Promise<{ latitude: number; longitude: number }> {
+    static async getCoordinates(city: string): Promise<{ latitude: number; longitude: number ; geocodeApiPlaceId: number,}> {
         try {
             const response = await fetch(`https://geocode.maps.co/search?q=${city}&api_key=65a4fed00e84b807084661tisfc7f77`);
 
@@ -46,7 +46,7 @@ export class Place extends BaseEntity {
             const responseData: any[] = await response.json();
 
             if (responseData && responseData.length > 0) {
-                return { latitude: parseFloat(responseData[0].lat), longitude: parseFloat(responseData[0].lon) };
+                return { latitude: parseFloat(responseData[0].lat), longitude: parseFloat(responseData[0].lon), geocodeApiPlaceId: parseInt(responseData[0].place_id)};
 
             } else {
                 throw new Error('Aucun résultat trouvé pour la ville spécifiée.');
@@ -54,5 +54,21 @@ export class Place extends BaseEntity {
         } catch (error: any) {
             throw new Error(`Erreur lors de la récupération des coordonnées : ${error.message}`);
         }
+    }
+
+    static async addPlace(name: string, city: string): Promise<Place> {
+        const coordinates = await Place.getCoordinates(city);
+        if (!coordinates) {
+            throw new Error('Aucune coordonnée trouvée');
+        }
+
+        const place = new Place();
+        place.name = name;
+        place.geocodeApiPlaceId = coordinates.geocodeApiPlaceId;
+        place.latitude = coordinates.latitude;
+        place.longitude = coordinates.longitude;
+
+        await place.save();
+        return place;
     }
 }

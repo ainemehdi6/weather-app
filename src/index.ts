@@ -4,6 +4,7 @@ import { DataSource } from "typeorm";
 import { Place } from "./Place";
 import { searchPlaces } from "./controllers";
 
+
 const dataSource = new DataSource({
   type: "sqlite",
   database: "./sqlite.db",
@@ -16,17 +17,30 @@ async function main() {
   await dataSource.initialize();
   const server = express();
 
+  const bodyParser = require("body-parser");
+  server.use(bodyParser.json());
+
+  // Message d'accueil home
   server.get("/", (_request, response) => {
     return response.json({ message: "Hello world!" });
   });
 
+  // GET météo par ville
   server.get("/weather", async (_request, response) => {
     const weather = new Weather("Lille");
     await weather.setCurrent();
     return response.json(weather);
   });
 
+  // GET chercher une villes (latitude, longitude)
   server.get("/search/places", searchPlaces);
+
+  // POST Ajouter une ville à la tables Places
+  server.post("/places", async(request, response)=> {
+    const {name, city} = request.body;
+    const place = await Place.addPlace(name, city);
+    return response.json({message: `La ville ${place.name} a été ajouté avec succès.`})
+  });  
 
   server.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}.`);
