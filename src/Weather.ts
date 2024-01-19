@@ -1,5 +1,7 @@
 import { CoordinatesForCity, TemperatureUnit } from "./types";
 import { WEATHER_CODES } from "./weather-codes";
+import { Place } from "./Place";
+import fetch from 'node-fetch';
 
 const COORDINATES_FOR_CITIES: CoordinatesForCity[] = [
   { city: "Lille", latitude: 50.6365654, longitude: 3.0635282 },
@@ -21,24 +23,24 @@ export class Weather {
   }
 
   async setCurrent(): Promise<void> {
-    const coordinates = COORDINATES_FOR_CITIES.find(
-      (_coordinates) => _coordinates.city === this.city
-    );
-    if (!coordinates) {
-      throw new Error(`No coordinates found for city ${this.city}.`);
-    }
 
-    const { latitude, longitude } = coordinates;
+    const place = new Place();
+    Place.getCoordinates(this.city)
+      .then(async coordinates => {
+        const weatherResponse = await fetch(
+          `https://api.open-meteo.com/v1/forecast?latitude=${coordinates.latitude}&longitude=${coordinates.longitude}&current=temperature_2m,weather_code`
+        );
+        const weather = (await weatherResponse.json()) as {
+          current: { temperature_2m: number; weather_code: number };
+        };
+        this.temperatureCelsius = weather.current.temperature_2m;
+        this.weatherCode = weather.current.weather_code;
 
-    const weatherResponse = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code`
-    );
-    const weather = (await weatherResponse.json()) as {
-      current: { temperature_2m: number; weather_code: number };
-    };
-
-    this.temperatureCelsius = weather.current.temperature_2m;
-    this.weatherCode = weather.current.weather_code;
+        this.print();
+      })
+      .catch(error => {
+        console.error(error.message);
+      });
   }
 
   print(temperatureUnit: TemperatureUnit = "CELSIUS"): void {
@@ -60,33 +62,33 @@ export class Weather {
 
     console.log(
       "┌" +
-        "-".repeat(
-          45 +
-            (text.length + icon.length >= 20 ? text.length + icon.length : 18)
-        ) +
-        "┐"
+      "-".repeat(
+        45 +
+        (text.length + icon.length >= 20 ? text.length + icon.length : 18)
+      ) +
+      "┐"
     );
     console.log(
       `| City   | Temperature (°${shortTemperatureUnit}) | Weather Description`
     );
     console.log(
       "|" +
-        "-".repeat(
-          45 +
-            (text.length + icon.length >= 20 ? text.length + icon.length : 18)
-        ) +
-        "|"
+      "-".repeat(
+        45 +
+        (text.length + icon.length >= 20 ? text.length + icon.length : 18)
+      ) +
+      "|"
     );
     console.log(
       `| ${this.city}   | ${temperature}°${shortTemperatureUnit}             | ${icon} ${text}`
     );
     console.log(
       "└" +
-        "-".repeat(
-          45 +
-            (text.length + icon.length >= 20 ? text.length + icon.length : 18)
-        ) +
-        "┘"
+      "-".repeat(
+        45 +
+        (text.length + icon.length >= 20 ? text.length + icon.length : 18)
+      ) +
+      "┘"
     );
   }
 }
