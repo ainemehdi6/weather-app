@@ -20,9 +20,9 @@ export async function searchPlaces(request: Request, response: Response) {
 
         if (responseData && responseData.length > 0) {
             const cities: Array<string[]> = []
-            responseData.forEach(city => {
+            for (const city of responseData) {
                 cities.push([city.place_id, city.display_name, city.lat, city.lon])
-            });
+            }
             console.log(cities);
             return { cities };
 
