@@ -19,23 +19,12 @@ export class Place extends BaseEntity {
     @Column()
     longitude?: number;
 
-    static async CreateNew(geocodeApiPlaceId: number, name: string, latitude: number, longitude: number) {
-        const place = new Place();
-        place.name = name;
-        place.geocodeApiPlaceId = geocodeApiPlaceId;
-        place.latitude = latitude;
-        place.longitude = longitude;
-
-        await place.save();
-        return place;
-    }
-
     static async getAll() {
 
     }
 
 
-    static async getCoordinates(city: string): Promise<{ latitude: number; longitude: number ; geocodeApiPlaceId: number,}> {
+    static async getCoordinates(city: string): Promise<{ latitude: number; longitude: number; geocodeApiPlaceId: number, }> {
         try {
             const response = await fetch(`https://geocode.maps.co/search?q=${city}&api_key=65a4fed00e84b807084661tisfc7f77`);
 
@@ -46,7 +35,7 @@ export class Place extends BaseEntity {
             const responseData: any[] = await response.json();
 
             if (responseData && responseData.length > 0) {
-                return { latitude: parseFloat(responseData[0].lat), longitude: parseFloat(responseData[0].lon), geocodeApiPlaceId: parseInt(responseData[0].place_id)};
+                return { latitude: parseFloat(responseData[0].lat), longitude: parseFloat(responseData[0].lon), geocodeApiPlaceId: parseInt(responseData[0].place_id) };
 
             } else {
                 throw new Error('Aucun résultat trouvé pour la ville spécifiée.');
@@ -71,4 +60,18 @@ export class Place extends BaseEntity {
         await place.save();
         return place;
     }
+
+    static async deletePlace(id: number): Promise<void> {
+        try {
+            const placeToDelete = await Place.findOne({ where: { id } });
+            if (!placeToDelete) {
+                throw new Error(`Le lieu n'existe pas`);
+            }
+
+            await placeToDelete.remove();
+        } catch (error) {
+            throw new Error(`Une erreur c'est produite lors de la suppresion du Lieu`);
+        }
+    }
+
 }

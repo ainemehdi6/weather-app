@@ -36,15 +36,27 @@ async function main() {
   server.get("/search/places", searchPlaces);
 
   // POST Ajouter une ville à la tables Places
-  server.post("/places", async(request, response)=> {
-    const {name, city} = request.body;
+  server.post("/places", async (request, response) => {
+    const { name, city } = request.body;
     const place = await Place.addPlace(name, city);
-    return response.json({message: `La ville ${place.name} a été ajouté avec succès.`})
-  });  
+    return response.json({ message: `La ville ${place.name} a été ajouté avec succès.` })
+  });
+
+  // DELETE Supprimer une ville de la table Places
+  server.delete("/places/:id", async (request, response) => {
+    const { id } = request.params;
+    try {
+      await Place.deletePlace(Number(id));
+      return response.json({ message: `Le lieu a été supprimé avec succès` });
+    } catch (error) {
+      return response.status(500).json(`Une erreur c'est produite lors de la suppresion `);
+    }
+  })
 
   server.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}.`);
   });
+
 }
 
 main();
