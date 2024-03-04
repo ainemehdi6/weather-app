@@ -39,7 +39,7 @@ async function main() {
   server.post("/places", async (request, response) => {
     const { name, city } = request.body;
     const place = await Place.addPlace(name, city);
-    return response.json({ message: `La ville ${place.name} a été ajouté avec succès.` })
+    return response.json({ message: `La ville ${name} a été ajouté avec succès.` })
   });
 
   // DELETE Supprimer une ville de la table Places
